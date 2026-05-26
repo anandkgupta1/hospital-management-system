@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MediCore — Hospital Management System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f8fafc;
+    --sidebar: #0f172a;
+    --white: #ffffff;
+    --primary: #e74c6f;
+    --blue: #0ea5e9;
+    --purple: #7c3aed;
+    --green: #10b981;
+    --orange: #f59e0b;
+    --text: #0f172a;
+    --muted: #64748b;
+    --light: #94a3b8;
+    --border: #e2e8f0;
+    --row-hover: #f8fafc;
+    --shadow: 0 1px 4px rgba(0,0,0,0.07);
+  }
+
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text); }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: 230px; flex-shrink: 0; background: var(--sidebar);
+    display: flex; flex-direction: column; padding: 24px 0;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; padding: 0 20px 24px; border-bottom: 1px solid #1e293b; }
+  .logo-icon { width: 38px; height: 38px; background: var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; font-weight: bold; }
+  .logo-title { font-family: 'Playfair Display', serif; color: #f1f5f9; font-size: 17px; }
+  .logo-sub { color: #475569; font-size: 11px; }
+  nav { padding: 20px 12px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .nav-btn {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    border-radius: 8px; border: none; background: transparent; color: #64748b;
+    cursor: pointer; font-size: 14px; font-family: 'DM Sans', sans-serif;
+    text-align: left; width: 100%; transition: all 0.15s;
+  }
+  .nav-btn:hover { background: #1e293b; color: #cbd5e1; }
+  .nav-btn.active { background: #1e293b; color: #f1f5f9; }
+  .nav-icon { font-size: 16px; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid #1e293b; display: flex; align-items: center; gap: 8px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+
+  /* ── MAIN ── */
+  #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  #header {
+    background: var(--white); border-bottom: 1px solid var(--border);
+    padding: 20px 32px; display: flex; align-items: center; justify-content: space-between;
+  }
+  #page-title { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--text); }
+  #page-date { font-size: 13px; color: var(--light); margin-top: 2px; }
+  #search-box {
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px;
+    font-size: 13px; outline: none; width: 230px; font-family: 'DM Sans', sans-serif;
+    color: #334155; display: none;
+  }
+  #content { flex: 1; overflow-y: auto; padding: 28px 32px; }
+
+  /* ── TABS ── */
+  .tab { display: none; }
+  .tab.active { display: block; }
+
+  /* ── STAT CARDS ── */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--white); border-radius: 12px; padding: 20px 24px;
+    box-shadow: var(--shadow); border-top: 3px solid var(--blue);
+  }
+  .stat-icon { font-size: 24px; margin-bottom: 8px; }
+  .stat-value { font-size: 32px; font-weight: 700; color: var(--text); line-height: 1; }
+  .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  /* ── CARDS ── */
+  .card { background: var(--white); border-radius: 12px; padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 16px; }
+  .card-header { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; }
+  .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .full-width { grid-column: 1 / -1; }
+
+  /* ── LIST ROWS ── */
+  .list-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f8fafc; }
+  .list-row:last-child { border-bottom: none; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #475569; font-size: 14px; flex-shrink: 0; }
+  .list-name { font-size: 14px; font-weight: 600; color: #1e293b; }
+  .list-sub { font-size: 12px; color: var(--light); margin-top: 2px; }
+  .empty { color: var(--light); font-size: 13px; text-align: center; padding: 20px 0; }
+
+  /* ── BADGES ── */
+  .badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+  .badge-blue { background: #f0f9ff; color: var(--blue); }
+  .badge-green { background: #f0fdf4; color: #16a34a; }
+  .badge-red { background: #fef2f2; color: #dc2626; }
+  .badge-purple { background: #faf5ff; color: var(--purple); }
+  .badge-yellow { background: #fefce8; color: #ca8a04; }
+
+  /* ── TWO COL ── */
+  .two-col { display: flex; gap: 20px; align-items: flex-start; }
+  .col-1 { flex: 1; }
+  .col-2 { flex: 2; }
+
+  /* ── FORM ── */
+  label.field-label { display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px; margin-top: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+  input.field, select.field {
+    width: 100%; border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 12px; font-size: 14px; color: #1e293b; outline: none;
+    background: #fff; font-family: 'DM Sans', sans-serif;
+    transition: border 0.15s;
+  }
+  input.field:focus, select.field:focus { border-color: var(--blue); }
+  .btn-primary {
+    margin-top: 20px; width: 100%; background: var(--sidebar); color: #fff;
+    border: none; border-radius: 8px; padding: 11px; font-size: 14px;
+    font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.3px; transition: background 0.15s;
+  }
+  .btn-primary:hover { background: #1e293b; }
+  .msg { margin-top: 10px; border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+  .msg-error { background: #fef2f2; color: #dc2626; }
+  .msg-success { background: #f0fdf4; color: #16a34a; }
+
+  /* ── TABLE ── */
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 11px; font-weight: 700; color: var(--light); text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 12px; border-bottom: 1px solid #f1f5f9; }
+  td { padding: 12px; font-size: 14px; color: #334155; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
+  tr:hover td { background: var(--row-hover); }
+
+  /* ── DOCTOR CARDS ── */
+  .doctor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+  .doctor-card { background: var(--white); border-radius: 14px; padding: 24px 16px; box-shadow: var(--shadow); text-align: center; }
+  .doctor-avatar { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; margin: 0 auto 12px; }
+  .doctor-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .doctor-id { font-size: 12px; color: var(--light); margin-top: 8px; }
+  .doctor-appts { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="logo">
+    <div class="logo-icon">✚</div>
+    <div>
+      <div class="logo-title">MediCore</div>
+      <div class="logo-sub">Hospital System</div>
+    </div>
+  </div>
+  <nav>
+    <button class="nav-btn active" onclick="switchTab('dashboard', this)"><span class="nav-icon">⊞</span> Dashboard</button>
+    <button class="nav-btn" onclick="switchTab('patients', this)"><span class="nav-icon">👥</span> Patients</button>
+    <button class="nav-btn" onclick="switchTab('doctors', this)"><span class="nav-icon">👨‍⚕️</span> Doctors</button>
+    <button class="nav-btn" onclick="switchTab('appointments', this)"><span class="nav-icon">📅</span> Appointments</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="dot"></div>
+    <span style="color:#64748b;font-size:12px;">System Online</span>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div id="main">
+  <header id="header">
+    <div>
+      <div id="page-title">Dashboard</div>
+      <div id="page-date"></div>
+    </div>
+    <input id="search-box" class="field" placeholder="🔍  Search patients..." oninput="filterPatients(this.value)" />
+  </header>
+
+  <div id="content">
+
+    <!-- DASHBOARD TAB -->
+    <div id="tab-dashboard" class="tab active">
+      <div class="stats-row">
+        <div class="stat-card" style="border-top-color:#0ea5e9">
+          <div class="stat-icon">👥</div>
+          <div class="stat-value" id="stat-patients">0</div>
+          <div class="stat-label">Total Patients</div>
+        </div>
+        <div class="stat-card" style="border-top-color:#7c3aed">
+          <div class="stat-icon">👨‍⚕️</div>
+          <div class="stat-value" id="stat-doctors">0</div>
+          <div class="stat-label">Total Doctors</div>
+        </div>
+        <div class="stat-card" style="border-top-color:#e74c6f">
+          <div class="stat-icon">📅</div>
+          <div class="stat-value" id="stat-appts">0</div>
+          <div class="stat-label">Appointments</div>
+        </div>
+        <div class="stat-card" style="border-top-color:#10b981">
+          <div class="stat-icon">🏥</div>
+          <div class="stat-value" id="stat-specs">0</div>
+          <div class="stat-label">Specializations</div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="card">
+          <div class="card-header">Recent Patients</div>
+          <div id="dash-patients"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">Doctors on Staff</div>
+          <div id="dash-doctors"></div>
+        </div>
+        <div class="card full-width">
+          <div class="card-header">Upcoming Appointments</div>
+          <div id="dash-appts"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PATIENTS TAB -->
+    <div id="tab-patients" class="tab">
+      <div class="two-col">
+        <div class="col-1">
+          <div class="card">
+            <div class="card-header">Add New Patient</div>
+            <label class="field-label">Full Name</label>
+            <input id="p-name" class="field" placeholder="e.g. Rajesh Kumar" />
+            <label class="field-label">Age</label>
+            <input id="p-age" class="field" type="number" placeholder="e.g. 35" min="1" max="150" />
+            <label class="field-label">Gender</label>
+            <select id="p-gender" class="field">
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+            <div id="p-msg"></div>
+            <button class="btn-primary" onclick="addPatient()">Add Patient</button>
+          </div>
+        </div>
+        <div class="col-2">
+          <div class="card">
+            <div class="card-header" id="patients-count-header">All Patients (0)</div>
+            <table>
+              <thead>
+                <tr><th>ID</th><th>Name</th><th>Age</th><th>Gender</th></tr>
+              </thead>
+              <tbody id="patients-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCTORS TAB -->
+    <div id="tab-doctors" class="tab">
+      <div class="doctor-grid" id="doctors-grid"></div>
+    </div>
+
+    <!-- APPOINTMENTS TAB -->
+    <div id="tab-appointments" class="tab">
+      <div class="two-col">
+        <div class="col-1">
+          <div class="card">
+            <div class="card-header">Book Appointment</div>
+            <label class="field-label">Patient</label>
+            <select id="a-patient" class="field"></select>
+            <label class="field-label">Doctor</label>
+            <select id="a-doctor" class="field"></select>
+            <label class="field-label">Appointment Date</label>
+            <input id="a-date" class="field" type="date" />
+            <div id="a-msg"></div>
+            <button class="btn-primary" onclick="bookAppointment()">Book Appointment</button>
+          </div>
+        </div>
+        <div class="col-2">
+          <div class="card">
+            <div class="card-header" id="appts-count-header">All Appointments (0)</div>
+            <table>
+              <thead>
+                <tr><th>ID</th><th>Patient</th><th>Doctor</th><th>Specialization</th><th>Date</th><th>Status</th></tr>
+              </thead>
+              <tbody id="appts-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const specColors = {
+  "Cardiology":   { bg: "#fde8ef", color: "#e74c6f" },
+  "Neurology":    { bg: "#f3e8ff", color: "#7c3aed" },
+  "Orthopedics":  { bg: "#e0f2fe", color: "#0ea5e9" },
+  "Pediatrics":   { bg: "#d1fae5", color: "#10b981" },
+};
+
+let doctors = [
+  { id: 1, name: "Dr. Priya Sharma",  specialization: "Cardiology"   },
+  { id: 2, name: "Dr. Rohan Mehta",   specialization: "Neurology"    },
+  { id: 3, name: "Dr. Anjali Singh",  specialization: "Orthopedics"  },
+  { id: 4, name: "Dr. Vikram Nair",   specialization: "Pediatrics"   },
+];
+
+let patients = [
+  { id: 1, name: "Anand Kumar", age: 34, gender: "Male"   },
+  { id: 2, name: "Sita Devi",   age: 52, gender: "Female" },
+];
+
+let appointments = [];
+let nextPatientId = 3;
+let nextApptId    = 1;
+
+// ── UTILS ──
+const today = () => new Date().toISOString().split("T")[0];
+const genderIcon = g => g === "Male" ? "♂" : g === "Female" ? "♀" : "⚧";
+const initials = name => name.split(" ").map(w => w[0]).join("").slice(0,2).toUpperCase();
+
+// ── TAB SWITCHING ──
+function switchTab(name, btn) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("tab-" + name).classList.add("active");
+  btn.classList.add("active");
+  document.getElementById("page-title").textContent =
+    name.charAt(0).toUpperCase() + name.slice(1);
+  document.getElementById("search-box").style.display =
+    name === "patients" ? "block" : "none";
+  if (name === "dashboard")    renderDashboard();
+  if (name === "patients")     renderPatients();
+  if (name === "doctors")      renderDoctors();
+  if (name === "appointments") renderAppointments();
+}
+
+// ── DATE ──
+document.getElementById("page-date").textContent =
+  new Date().toLocaleDateString("en-IN", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+document.getElementById("a-date").min = today();
+
+// ── ADD PATIENT ──
+function addPatient() {
+  const msgEl = document.getElementById("p-msg");
+  msgEl.innerHTML = "";
+  const name   = document.getElementById("p-name").value.trim();
+  const age    = parseInt(document.getElementById("p-age").value);
+  const gender = document.getElementById("p-gender").value;
+  if (!name) return showMsg("p-msg", "Patient name is required.", "error");
+  if (!age || age <= 0 || age > 150) return showMsg("p-msg", "Enter a valid age (1–150).", "error");
+  patients.push({ id: nextPatientId++, name, age, gender });
+  document.getElementById("p-name").value = "";
+  document.getElementById("p-age").value  = "";
+  showMsg("p-msg", `Patient "${name}" added successfully!`, "success");
+  renderPatients();
+  populateSelects();
+}
+
+// ── BOOK APPOINTMENT ──
+function bookAppointment() {
+  const pid  = parseInt(document.getElementById("a-patient").value);
+  const did  = parseInt(document.getElementById("a-doctor").value);
+  const date = document.getElementById("a-date").value;
+  if (!pid || !did || !date) return showMsg("a-msg", "All fields are required.", "error");
+  const patient = patients.find(p => p.id === pid);
+  const doctor  = doctors.find(d => d.id === did);
+  if (!patient) return showMsg("a-msg", `No patient found with ID ${pid}.`, "error");
+  if (!doctor)  return showMsg("a-msg", `No doctor found with ID ${did}.`, "error");
+  const conflict = appointments.find(a => a.doctorId === did && a.date === date);
+  if (conflict)  return showMsg("a-msg", `${doctor.name} is not available on ${date}.`, "error");
+  appointments.push({
+    id: nextApptId++, patientId: pid, doctorId: did, date,
+    patientName: patient.name, doctorName: doctor.name,
+    specialization: doctor.specialization,
+  });
+  document.getElementById("a-date").value = "";
+  showMsg("a-msg", `Appointment booked for ${patient.name} with ${doctor.name} on ${date}.`, "success");
+  renderAppointments();
+}
+
+// ── HELPERS ──
+function showMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.className = "msg " + (type === "error" ? "msg-error" : "msg-success");
+  el.textContent = text;
+}
+
+function specBadge(spec) {
+  const c = specColors[spec] || { bg: "#f1f5f9", color: "#475569" };
+  return `<span class="badge" style="background:${c.bg};color:${c.color}">${spec}</span>`;
+}
+
+// ── RENDER DASHBOARD ──
+function renderDashboard() {
+  document.getElementById("stat-patients").textContent = patients.length;
+  document.getElementById("stat-doctors").textContent  = doctors.length;
+  document.getElementById("stat-appts").textContent    = appointments.length;
+  document.getElementById("stat-specs").textContent    = new Set(doctors.map(d => d.specialization)).size;
+
+  // Recent patients
+  const rp = document.getElementById("dash-patients");
+  const recent = [...patients].reverse().slice(0, 4);
+  rp.innerHTML = recent.length ? recent.map(p => `
+    <div class="list-row">
+      <div class="avatar">${initials(p.name)}</div>
+      <div><div class="list-name">${p.name}</div><div class="list-sub">Age ${p.age} · ${p.gender}</div></div>
+      <span class="badge badge-blue" style="margin-left:auto">ID #${p.id}</span>
+    </div>`).join("") : `<div class="empty">No patients yet</div>`;
+
+  // Doctors
+  const rd = document.getElementById("dash-doctors");
+  rd.innerHTML = doctors.map(d => {
+    const c = specColors[d.specialization] || { bg: "#f1f5f9", color: "#475569" };
+    return `<div class="list-row">
+      <div class="avatar" style="background:${c.bg};color:${c.color}">${d.name.split(" ")[1][0]}</div>
+      <div><div class="list-name">${d.name}</div><div class="list-sub">${d.specialization}</div></div>
+      ${specBadge(d.specialization)}
+    </div>`;
+  }).join("");
+
+  // Upcoming appointments
+  const ra = document.getElementById("dash-appts");
+  const upcoming = appointments.filter(a => a.date >= today());
+  ra.innerHTML = upcoming.length ? upcoming.map(a => `
+    <div class="list-row">
+      <div class="avatar" style="background:#fef9c3;color:#ca8a04">📅</div>
+      <div style="flex:1"><div class="list-name">${a.patientName}</div><div class="list-sub">${a.doctorName} · ${a.specialization}</div></div>
+      <span class="badge badge-green">${a.date}</span>
+    </div>`).join("") : `<div class="empty">No upcoming appointments</div>`;
+}
+
+// ── RENDER PATIENTS ──
+let currentSearch = "";
+function filterPatients(q) { currentSearch = q; renderPatients(); }
+
+function renderPatients() {
+  const filtered = patients.filter(p =>
+    p.name.toLowerCase().includes(currentSearch.toLowerCase())
+  );
+  document.getElementById("patients-count-header").textContent = `All Patients (${filtered.length})`;
+  const tbody = document.getElementById("patients-tbody");
+  tbody.innerHTML = filtered.length ? filtered.map(p => `
+    <tr>
+      <td><span class="badge badge-blue">#${p.id}</span></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar" style="width:30px;height:30px;font-size:12px">${initials(p.name)}</div>${p.name}</div></td>
+      <td>${p.age}</td>
+      <td>${genderIcon(p.gender)} ${p.gender}</td>
+    </tr>`).join("") :
+    `<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:20px">No patients found</td></tr>`;
+}
+
+// ── RENDER DOCTORS ──
+function renderDoctors() {
+  const grid = document.getElementById("doctors-grid");
+  grid.innerHTML = doctors.map(d => {
+    const c = specColors[d.specialization] || { bg: "#f1f5f9", color: "#475569" };
+    const apptCount = appointments.filter(a => a.doctorId === d.id).length;
+    return `<div class="doctor-card">
+      <div class="doctor-avatar" style="background:${c.bg};color:${c.color}">${d.name.split(" ")[1][0]}</div>
+      <div class="doctor-name">${d.name}</div>
+      <span class="badge" style="background:${c.bg};color:${c.color};display:inline-block;margin:4px auto">${d.specialization}</span>
+      <div class="doctor-id">Doctor ID: #${d.id}</div>
+      <div class="doctor-appts">${apptCount} appointment(s)</div>
+    </div>`;
+  }).join("");
+}
+
+// ── RENDER APPOINTMENTS ──
+function renderAppointments() {
+  document.getElementById("appts-count-header").textContent = `All Appointments (${appointments.length})`;
+  const tbody = document.getElementById("appts-tbody");
+  tbody.innerHTML = appointments.length ? appointments.map(a => {
+    const past = a.date < today();
+    return `<tr>
+      <td><span class="badge badge-purple">#${a.id}</span></td>
+      <td>${a.patientName}</td>
+      <td>${a.doctorName}</td>
+      <td>${specBadge(a.specialization)}</td>
+      <td>${a.date}</td>
+      <td><span class="badge ${past ? "badge-red" : "badge-green"}">${past ? "Completed" : "Upcoming"}</span></td>
+    </tr>`;
+  }).join("") :
+  `<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">No appointments booked yet</td></tr>`;
+}
+
+// ── POPULATE SELECTS ──
+function populateSelects() {
+  const ps = document.getElementById("a-patient");
+  const ds = document.getElementById("a-doctor");
+  const pvl = ps.value;
+  const dvl = ds.value;
+  ps.innerHTML = `<option value="">— Select Patient —</option>` +
+    patients.map(p => `<option value="${p.id}">#${p.id} · ${p.name}</option>`).join("");
+  ds.innerHTML = `<option value="">— Select Doctor —</option>` +
+    doctors.map(d => `<option value="${d.id}">#${d.id} · ${d.name} (${d.specialization})</option>`).join("");
+  ps.value = pvl;
+  ds.value = dvl;
+}
+
+// ── INIT ──
+renderDashboard();
+renderPatients();
+renderDoctors();
+renderAppointments();
+populateSelects();
+</script>
+</body>
+</html>
